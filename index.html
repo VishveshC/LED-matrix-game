@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Arduino Game Documentation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F5F5F4; /* stone-100 */
+            color: #292524; /* stone-800 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 250px;
+            max-height: 300px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 300px;
+            }
+        }
+        .nav-link.active {
+            background-color: #57534E; /* stone-600 */
+            color: #FAFAF9; /* stone-50 */
+        }
+        .code-block {
+            background-color: #292524; /* stone-800 */
+            color: #E7E5E4; /* stone-200 */
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            font-family: monospace;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-stone-700">Arduino Game Docs</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#overview" class="nav-item text-stone-600 hover:bg-stone-200 px-3 py-2 rounded-md text-sm font-medium">Overview</a>
+                        <a href="#config" class="nav-item text-stone-600 hover:bg-stone-200 px-3 py-2 rounded-md text-sm font-medium">Interactive Config</a>
+                        <a href="#deep-dive" class="nav-item text-stone-600 hover:bg-stone-200 px-3 py-2 rounded-md text-sm font-medium">Code Deep Dive</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+        <section id="overview" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl font-bold tracking-tight text-stone-800 sm:text-4xl">Project Overview</h2>
+            <p class="mt-4 text-lg text-stone-600 max-w-3xl">This is an interactive documentation for a "crossy-road" style game played on a 16x8 LED matrix and controlled by an Arduino. The objective is to navigate a player pixel through oncoming traffic, surviving as long as possible. This page breaks down the project's hardware, configuration, and code logic into digestible, interactive sections.</p>
+            
+            <div class="mt-10">
+                <h3 class="text-2xl font-semibold text-stone-700">Hardware & Libraries</h3>
+                <div class="mt-6 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <div class="flex items-center justify-center h-12 w-12 rounded-md bg-teal-500 text-white">
+                            <span class="text-2xl font-bold">μC</span>
+                        </div>
+                        <h4 class="mt-4 text-lg font-medium text-stone-800">Arduino Microcontroller</h4>
+                        <p class="mt-2 text-sm text-stone-500">The brain of the project (e.g., Arduino Uno, Nano) that runs the game logic.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <div class="flex items-center justify-center h-12 w-12 rounded-md bg-teal-500 text-white">
+                            <span class="text-2xl">⚃</span>
+                        </div>
+                        <h4 class="mt-4 text-lg font-medium text-stone-800">MAX7219 LED Matrices (x2)</h4>
+                        <p class="mt-2 text-sm text-stone-500">Two 8x8 matrices are chained to form the 16x8 game display.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <div class="flex items-center justify-center h-12 w-12 rounded-md bg-teal-500 text-white">
+                            <span class="text-2xl">🔘</span>
+                        </div>
+                        <h4 class="mt-4 text-lg font-medium text-stone-800">Push-buttons (x3)</h4>
+                        <p class="mt-2 text-sm text-stone-500">Used for player controls (Up, Down) and to reset the game after a loss.</p>
+                    </div>
+                </div>
+                 <div class="mt-6 bg-white p-6 rounded-lg shadow-md">
+                    <h4 class="text-lg font-medium text-stone-800">Core Library: `MD_MAX72xx.h`</h4>
+                    <p class="mt-2 text-sm text-stone-500">A powerful library for controlling MAX7219 LED matrix displays. It simplifies tasks like setting individual pixels, controlling brightness, and clearing the screen, forming the bridge between our code and the visual output.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="config" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl font-bold tracking-tight text-stone-800 sm:text-4xl">Interactive Configuration</h2>
+            <p class="mt-4 text-lg text-stone-600 max-w-3xl">The game's difficulty is tuned using several key variables in the code. Use the sliders and inputs below to see how changing these values affects gameplay. This demonstrates the flexibility of the code's design without needing to re-upload it to the Arduino.</p>
+
+            <div class="mt-10 grid grid-cols-1 gap-8 md:grid-cols-2">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <label for="pixelSpeed" class="block text-lg font-medium text-stone-700">Traffic Speed (`pixel_speed`)</label>
+                    <p class="text-sm text-stone-500 mt-1">Controls how fast traffic moves. Lower is faster and harder.</p>
+                    <input id="pixelSpeed" type="range" min="200" max="1500" value="800" class="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer mt-4">
+                    <div class="mt-2 text-center font-semibold text-teal-600" id="pixelSpeedValue">800 ms</div>
+                    <p class="mt-2 text-sm text-center text-stone-600" id="pixelSpeedEffect">A moderate pace.</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <label for="playerMove" class="block text-lg font-medium text-stone-700">Player Move Interval</label>
+                    <p class="text-sm text-stone-500 mt-1">Debounce delay for player movement. Higher means slower response.</p>
+                    <input id="playerMove" type="range" min="300" max="1000" value="300" class="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer mt-4">
+                    <div class="mt-2 text-center font-semibold text-teal-600" id="playerMoveValue">300 ms</div>
+                    <p class="mt-2 text-sm text-center text-stone-600" id="playerMoveEffect">Very responsive controls.</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-md md:col-span-2">
+                    <label for="gapSlots" class="block text-lg font-medium text-stone-700">Gap Slots (`gap_slots`)</label>
+                    <p class="text-sm text-stone-500 mt-1">Controls the chance of extra gaps in traffic lanes. Lower is easier.</p>
+                    <div class="flex items-center justify-center mt-4 space-x-4">
+                        <span class="text-stone-600">Easier</span>
+                        <input id="gapSlots" type="range" min="1" max="10" value="2" class="w-full max-w-sm h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer">
+                        <span class="text-stone-600">Harder</span>
+                    </div>
+                    <div class="mt-2 text-center font-semibold text-teal-600" id="gapSlotsValue">Value: 2</div>
+                    <p class="mt-2 text-sm text-center text-stone-600" id="gapSlotsEffect">There is a 1-in-2 chance of a second gap appearing.</p>
+                </div>
+            </div>
+        </section>
+
+        
+
+        <section id="deep-dive" class="scroll-mt-24">
+            <h2 class="text-3xl font-bold tracking-tight text-stone-800 sm:text-4xl">Code Deep Dive</h2>
+            <p class="mt-4 text-lg text-stone-600 max-w-3xl">Explore the functions that power the game. Click on a function name in the navigation panel to jump to its detailed explanation, including the code and the reasoning behind its design.</p>
+            
+            <div class="mt-10 md:flex md:space-x-8">
+                <aside class="md:w-1/4 lg:w-1/5 mb-8 md:mb-0">
+                    <div class="sticky top-24">
+                        <h3 class="text-lg font-semibold text-stone-700 mb-3">Functions</h3>
+                        <ul id="function-nav" class="space-y-2">
+                            <li><a href="#fn-setup" class="nav-link block px-3 py-2 rounded-md text-stone-600 hover:bg-stone-200">setup()</a></li>
+                            <li><a href="#fn-loop" class="nav-link block px-3 py-2 rounded-md text-stone-600 hover:bg-stone-200">loop()</a></li>
+                            <li><a href="#fn-startGame" class="nav-link block px-3 py-2 rounded-md text-stone-600 hover:bg-stone-200">startGame()</a></li>
+                            <li><a href="#fn-handlePlayerInput" class="nav-link block px-3 py-2 rounded-md text-stone-600 hover:bg-stone-200">handlePlayerInput()</a></li>
+                            <li><a href="#fn-updateGameLogic" class="nav-link block px-3 py-2 rounded-md text-stone-600 hover:bg-stone-200">updateGameLogic()</a></li>
+                            <li><a href="#fn-generateNewLane" class="nav-link block px-3 py-2 rounded-md text-stone-600 hover:bg-stone-200">generateNewLane()</a></li>
+                            <li><a href="#fn-printScreen" class="nav-link block px-3 py-2 rounded-md text-stone-600 hover:bg-stone-200">printScreen()</a></li>
+                            <li><a href="#fn-GameOVER" class="nav-link block px-3 py-2 rounded-md text-stone-600 hover:bg-stone-200">GameOVER()</a></li>
+                        </ul>
+                    </div>
+                </aside>
+                <div id="function-docs" class="md:w-3/4 lg:w-4/5">
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const MATRIX_WIDTH = 16;
+            const MATRIX_HEIGHT = 8;
+            let traffic = Array(MATRIX_WIDTH).fill(0).map(() => Array(MATRIX_HEIGHT).fill(0));
+            let gapChart;
+
+            const docData = {
+                "fn-setup": {
+                    title: "void setup()",
+                    code: `void setup() {
+  Serial.begin(9600);
+  mx.begin();
+  mx.control(MD_MAX72XX::INTENSITY, MAX_INTENSITY / 2);
+  mx.clear();
+
+  pinMode(UP_BUTTON_PIN, INPUT_PULLUP);
+  pinMode(DOWN_BUTTON_PIN, INPUT_PULLUP);
+  pinMode(RESET_BUTTON_PIN, INPUT_PULLUP);
+  
+  startGame();
+}`,
+                    what: "Initializes the hardware, serial communication, and game variables when the Arduino first powers on.",
+                    why: "The setup() function runs only once. It's the standard place to configure everything the program needs before the main loop begins. It sets up serial for debugging, initializes the matrix, configures button pins with internal pull-up resistors (simplifying wiring), and calls startGame() to set the initial game state."
+                },
+                "fn-loop": {
+                    title: "void loop()",
+                    code: `void loop() {
+  if (is_game_over) {
+    if (digitalRead(RESET_BUTTON_PIN) == LOW) {
+      startGame();
+    }
+  } else {
+    handlePlayerInput();
+    updateGameLogic();
+
+    if (screen_update) {
+      printScreen();
+      screen_update = false;
+    }
+  }
+}`,
+                    what: "This is the main engine of the game. It runs continuously after setup() is finished.",
+                    why: "The logic is split based on the is_game_over flag. If the game is over, it only checks for a reset command. Otherwise, it runs the core gameplay loop: handling input, updating game logic, and redrawing the screen only when necessary (the screen_update flag is a crucial optimization to prevent flickering)."
+                },
+                "fn-startGame": {
+                    title: "void startGame()",
+                    code: `void startGame() {
+  screen_update = true;
+  is_game_over = false;
+  score = -3;
+
+  for (int x = 0; x < MATRIX_WIDTH; x++) {
+    for (int y = 0; y < MATRIX_HEIGHT; y++) {
+      traffic[x][y] = 0;
+    }
+  }
+
+  traffic_move_timer = millis();
+  traffic_gen_timer = millis();
+  player_move_timer = millis();
+}`,
+                    what: "Resets all game variables to their initial state.",
+                    why: "This function centralizes the reset logic, avoiding code duplication. It's called at the very beginning and when the player resets. It clears the virtual traffic array, resets flags and timers, and sets the score to -3 as a simple fix for the initial delay before traffic reaches the player."
+                },
+                "fn-handlePlayerInput": {
+                    title: "void handlePlayerInput()",
+                    code: `void handlePlayerInput() {
+  if (millis() - player_move_timer > player_move_interval) {
+    if (digitalRead(UP_BUTTON_PIN) == LOW) {
+      if (PLAYER_Y > 0) {
+        PLAYER_Y--;
+        screen_update = true;
+        player_move_timer = millis();
+      }
+    }
+    if (digitalRead(DOWN_BUTTON_PIN) == LOW) {
+      if (PLAYER_Y < MATRIX_HEIGHT - 1) {
+        PLAYER_Y++;
+        screen_update = true;
+        player_move_timer = millis();
+      }
+    }
+  }
+}`,
+                    what: "Manages the player's movement based on button presses.",
+                    why: "It uses a non-blocking delay (millis()) to act as a debouncer, ensuring one press results in one controlled move. Crucially, it includes boundary checks to prevent the player from moving off the top or bottom of the screen. A valid move sets screen_update to true to trigger a redraw."
+                },
+                "fn-updateGameLogic": {
+                    title: "void updateGameLogic()",
+                    code: `void updateGameLogic() {
+  // 1. Move existing traffic
+  if (millis() - traffic_move_timer > pixel_speed) {
+    if (traffic[PLAYER_X][PLAYER_Y] == 1) {
+      GameOVER();
+      return;
+    }
+    // Shifting logic...
+    traffic_move_timer = millis();
+  }
+
+  // 2. Generate a new lane of traffic
+  if (millis() - traffic_gen_timer > lane_gen_interval) {
+    generateNewLane();
+    score++;
+    traffic_gen_timer = millis();
+  }
+}`,
+                    what: "This is the heart of the game's progression. It handles traffic movement and generation.",
+                    why: "It's split into two independent, time-based events using non-blocking delays. First, it checks if it's time to move the traffic, performing a collision check BEFORE shifting the pixels. Second, it checks if it's time to generate a new lane, keeping the game flowing."
+                },
+                "fn-generateNewLane": {
+                    title: "void generateNewLane()",
+                    code: `void generateNewLane() {
+  int empty_spot = random(MATRIX_HEIGHT);
+  int second_empty_spot = -1;
+
+  if (random((int)gap_slots) == 0) {
+    second_empty_spot = random(MATRIX_HEIGHT);
+  }
+
+  for (int y = 0; y < MATRIX_HEIGHT; y++) {
+    if (y == empty_spot || y == second_empty_spot) {
+      traffic[0][y] = 0; // Gap
+    } else {
+      traffic[0][y] = 1; // Traffic
+    }
+  }
+}`,
+                    what: "Creates a new, randomized column of traffic on the left edge of the virtual grid.",
+                    why: "This function ensures gameplay is unpredictable. It guarantees at least one safe gap in every lane. The difficulty setting gap_slots is used here to determine the probability of a second gap appearing, making the game easier or harder."
+                },
+                "fn-printScreen": {
+                    title: "void printScreen()",
+                    code: `void printScreen() {
+  mx.clear();
+
+  for (int x = 0; x < MATRIX_WIDTH; x++) {
+    for (int y = 0; y < MATRIX_HEIGHT; y++) {
+      if (traffic[x][y] == 1) {
+        mx.setPoint(y, x, true);
+      }
+    }
+  }
+  mx.setPoint(PLAYER_Y, PLAYER_X, true);
+}`,
+                    what: "Renders the virtual traffic array and the player onto the physical LED matrix.",
+                    why: "This function translates the game's data state into a visual output. It first clears the display, then iterates through the virtual grid to turn on the necessary LEDs. It's important to note the library's coordinate system is (row, column), which corresponds to our (y, x), requiring a swap in the setPoint call."
+                },
+                "fn-GameOVER": {
+                    title: "void GameOVER()",
+                    code: `void GameOVER() {
+  is_game_over = true;
+  mx.clear();
+
+  // Flashing animation...
+  
+  sad(); // Draws a sad face
+  
+  Serial.println("##### GAME OVER! #####");
+}`,
+                    what: "Handles the end-of-game sequence.",
+                    why: "This function provides clear feedback to the player. It sets the is_game_over flag to stop the game loop, performs a visual animation (flashing screen and drawing a sad face) to signify the end, and prints the final score to the serial monitor for debugging."
+                }
+            };
+
+            const functionDocsContainer = document.getElementById('function-docs');
+            Object.entries(docData).forEach(([id, data]) => {
+                const section = document.createElement('div');
+                section.id = id;
+                section.className = 'mb-12 scroll-mt-24';
+                section.innerHTML = `
+                    <h3 class="text-2xl font-semibold text-stone-700">${data.title}</h3>
+                    <div class="mt-4">
+                        <h4 class="text-lg font-medium text-stone-800">What it does:</h4>
+                        <p class="mt-1 text-stone-600">${data.what}</p>
+                    </div>
+                    <div class="mt-4">
+                        <h4 class="text-lg font-medium text-stone-800">Why it's designed that way:</h4>
+                        <p class="mt-1 text-stone-600">${data.why}</p>
+                    </div>
+                    <div class="mt-4">
+                        <h4 class="text-lg font-medium text-stone-800">Code:</h4>
+                        <div class="code-block mt-2"><pre><code>${data.code}</code></pre></div>
+                    </div>
+                `;
+                functionDocsContainer.appendChild(section);
+            });
+
+            const pixelSpeedSlider = document.getElementById('pixelSpeed');
+            const pixelSpeedValue = document.getElementById('pixelSpeedValue');
+            const pixelSpeedEffect = document.getElementById('pixelSpeedEffect');
+
+            pixelSpeedSlider.addEventListener('input', (e) => {
+                const value = e.target.value;
+                pixelSpeedValue.textContent = `${value} ms`;
+                if (value < 400) pixelSpeedEffect.textContent = "Extremely fast, very difficult.";
+                else if (value < 700) pixelSpeedEffect.textContent = "Fast-paced, challenging.";
+                else if (value < 1100) pixelSpeedEffect.textContent = "A moderate pace.";
+                else pixelSpeedEffect.textContent = "Slow and steady, easier.";
+            });
+
+            const playerMoveSlider = document.getElementById('playerMove');
+            const playerMoveValue = document.getElementById('playerMoveValue');
+            const playerMoveEffect = document.getElementById('playerMoveEffect');
+
+            playerMoveSlider.addEventListener('input', (e) => {
+                const value = e.target.value;
+                playerMoveValue.textContent = `${value} ms`;
+                if (value < 400) playerMoveEffect.textContent = "Very responsive controls.";
+                else if (value < 700) playerMoveEffect.textContent = "Standard responsiveness.";
+                else playerMoveEffect.textContent = "Slower, more deliberate controls.";
+            });
+
+            const gapSlotsSlider = document.getElementById('gapSlots');
+            const gapSlotsValue = document.getElementById('gapSlotsValue');
+            const gapSlotsEffect = document.getElementById('gapSlotsEffect');
+            
+            const updateGapChart = (gapValue) => {
+                const probability = 1 / gapValue;
+                const chance = (probability * 100).toFixed(1);
+                gapSlotsValue.textContent = `Value: ${gapValue}`;
+                gapSlotsEffect.textContent = `There is a 1-in-${gapValue} (${chance}%) chance of a second gap appearing.`;
+
+                if (gapChart) {
+                    gapChart.data.datasets[0].data = [1 - probability, probability];
+                    gapChart.update();
+                }
+            };
+
+            gapSlotsSlider.addEventListener('input', (e) => {
+                updateGapChart(e.target.value);
+            });
+
+            const createTrafficGrid = () => {
+                const grid = document.getElementById('trafficGrid');
+                grid.innerHTML = '';
+                for (let y = 0; y < MATRIX_HEIGHT; y++) {
+                    for (let x = 0; x < MATRIX_WIDTH; x++) {
+                        const cell = document.createElement('div');
+                        cell.classList.add('w-4', 'h-4', 'md:w-6', 'md:h-6', 'rounded-sm', 'transition-colors', 'duration-200');
+                        cell.classList.add(traffic[x][y] === 1 ? 'bg-teal-500' : 'bg-stone-200');
+                        if (x === 13 && y === 4) {
+                             cell.classList.remove('bg-teal-500', 'bg-stone-200');
+                             cell.classList.add('bg-red-500');
+                        }
+                        grid.appendChild(cell);
+                    }
+                }
+            };
+
+            document.getElementById('shiftBtn').addEventListener('click', () => {
+                for (let x = MATRIX_WIDTH - 1; x > 0; x--) {
+                    for (let y = 0; y < MATRIX_HEIGHT; y++) {
+                        traffic[x][y] = traffic[x - 1][y];
+                    }
+                }
+                for (let y = 0; y < MATRIX_HEIGHT; y++) {
+                    traffic[0][y] = 0;
+                }
+                createTrafficGrid();
+            });
+
+            document.getElementById('generateBtn').addEventListener('click', () => {
+                const gapValue = document.getElementById('gapSlots').value;
+                const empty_spot = Math.floor(Math.random() * MATRIX_HEIGHT);
+                let second_empty_spot = -1;
+                if (Math.floor(Math.random() * gapValue) === 0) {
+                    second_empty_spot = Math.floor(Math.random() * MATRIX_HEIGHT);
+                }
+                for (let y = 0; y < MATRIX_HEIGHT; y++) {
+                    traffic[0][y] = (y === empty_spot || y === second_empty_spot) ? 0 : 1;
+                }
+                createTrafficGrid();
+            });
+            
+            document.getElementById('resetBtn').addEventListener('click', () => {
+                traffic = Array(MATRIX_WIDTH).fill(0).map(() => Array(MATRIX_HEIGHT).fill(0));
+                createTrafficGrid();
+            });
+
+            const initGapChart = () => {
+                const ctx = document.getElementById('gapChart').getContext('2d');
+                gapChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Single Gap', 'Second Gap'],
+                        datasets: [{
+                            data: [0.5, 0.5],
+                            backgroundColor: ['#57534E', '#14B8A6'], // stone-600, teal-500
+                            borderColor: '#F5F5F4', // stone-100
+                            borderWidth: 4,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '70%',
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    color: '#57534E',
+                                    font: {
+                                        family: "'Inter', sans-serif"
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed !== null) {
+                                            label += (context.parsed * 100).toFixed(1) + '%';
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                updateGapChart(document.getElementById('gapSlots').value);
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const id = entry.target.getAttribute('id');
+                    const navLink = document.querySelector(`.nav-link[href="#${id}"]`);
+                    if (entry.isIntersecting) {
+                        document.querySelectorAll('.nav-link.active').forEach(link => link.classList.remove('active'));
+                        if(navLink) navLink.classList.add('active');
+                    }
+                });
+            }, { rootMargin: "-50% 0px -50% 0px" });
+
+            document.querySelectorAll('#function-docs > div').forEach(section => {
+                observer.observe(section);
+            });
+            
+            createTrafficGrid();
+            initGapChart();
+        });
+    </script>
+</body>
+</html>
